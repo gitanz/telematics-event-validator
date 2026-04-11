@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.env
+.env.*
+*.egg-info/
+dist/
+build/
+venv/
+.DS_Store
+.git/
+.gitignore
+.idea/
+.vscode/
+*.swp
+*.bak
+*.tmp
+coverage*
+
+# Exclude test and local files
+/tests/
+*.pytest_cache/
+

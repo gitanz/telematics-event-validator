@@ -1,0 +1,10 @@
+name: 'Trips Simulator'
+services:
+  trips-simulator:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    volumes:
+      - ../:/app
+    working_dir: /app
+    container_name: trips-simulator
