@@ -1,8 +1,10 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Union, List
 from sqlalchemy import text, Connection
 
-from models.moderator import Location
+from exceptions.trip_exceptions import TripNotFoundException, UnauthorizedTripException
+from models.moderator import Location, Moderator
 from models.trip import Trip, Stop
 
 
@@ -14,6 +16,15 @@ class TripRepositoryInterface(ABC):
     @abstractmethod
     def list_trips(self, location: str) -> List[Trip]:
         pass
+
+    @abstractmethod
+    def claim_trip(self, trip_id: str, moderator: Moderator) -> bool:
+        pass
+
+    @abstractmethod
+    def acknowledge_trip(self, trip_id: str, moderator: Moderator) -> bool:
+        pass
+
 
 class MySQLTripRepository(TripRepositoryInterface):
     def __init__(self, connection: Connection):
@@ -69,3 +80,93 @@ class MySQLTripRepository(TripRepositoryInterface):
                 end= Stop.from_values(trip["end_location"], trip["end_datetime"]) if trip["end_location"] and trip["end_datetime"] else None,
             ) for trip in trips
         ]
+
+    def claim_trip(self, trip_id: str, moderator: Moderator) -> bool:
+        transaction = self.connection.begin()
+        try:
+            trip_sql = text("""
+                SELECT trips.* FROM trips
+                LEFT JOIN trips_claims ON
+                    trips.id = trips_claims.trip_id
+                WHERE
+                    trips.unique_id = :unique_id AND
+                    trips.location = :location AND
+                    trips_claims.trip_id IS NULL
+                FOR UPDATE
+            """)
+
+            results = self.connection.execute(trip_sql, {
+                'unique_id': trip_id,
+                'location': moderator.location.value,
+            })
+
+            trip = results.mappings().fetchone()
+
+            if not trip:
+                raise TripNotFoundException()
+
+            claim_sql = text("""
+                INSERT INTO trips_claims (trip_id, claimed_by, claimed_at)
+                VALUES (
+                    :trip_id,
+                    :claimed_by,
+                    NOW()
+                )
+            """)
+
+            self.connection.execute(claim_sql, {
+                'trip_id': trip['id'],
+                'claimed_by': moderator.moderator_id
+            })
+
+            transaction.commit()
+        except Exception as e:
+            transaction.rollback()
+            raise e
+        return True
+
+    def acknowledge_trip(self, trip_id: str, moderator: Moderator) -> bool:
+        transaction = self.connection.begin()
+        try:
+            trip_sql = text("""
+                SELECT trips.* FROM trips
+                LEFT JOIN trips_claims ON trips.id = trips_claims.trip_id
+                LEFT JOIN trips_acknowledgements ON trips.id =trips_acknowledgements.trip_id
+                WHERE
+                    trips.unique_id = :unique_id AND
+                    trips.location = :location AND
+                    trips_claims.claimed_by = :claimed_by AND
+                    trips_acknowledgements.trip_id IS NULL
+                FOR UPDATE
+            """)
+
+            results = self.connection.execute(trip_sql, {
+                'unique_id': trip_id,
+                'location': moderator.location.value,
+                'claimed_by': moderator.moderator_id,
+            })
+
+            trip = results.mappings().fetchone()
+
+            if not trip:
+                raise UnauthorizedTripException()
+
+            claim_sql = text("""
+                INSERT INTO trips_acknowledgements (trip_id, acknowledged_by, acknowledged_at)
+                VALUES (
+                    :trip_id,
+                    :acknowledged_by,
+                    NOW()
+                )
+            """)
+
+            self.connection.execute(claim_sql, {
+                'trip_id': trip['id'],
+                'acknowledged_by': moderator.moderator_id,
+            })
+
+            transaction.commit()
+        except Exception as e:
+            transaction.rollback()
+            raise e
+        return True

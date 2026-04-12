@@ -20,4 +20,8 @@
     
     - Claim Trip
       - Logged in Moderators will be able to claim a trip for review
-      - The endpoint /v1/trips/{trip_id}/claim will accept a POST request
+      - The endpoint /v1/trips/{trip_id}/claim will accept a PATCH request
+  
+    - Acknowledge Trip
+      - Moderators who have claimed a trip will be able to acknowledge it as fraudulent or not fraudulent
+      - The endpoint /v1/trips/{trip_id}/acknowledge will accept a PATCH request

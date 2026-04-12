@@ -39,3 +39,24 @@ INSERT INTO moderators (location) VALUES
     ('South America'), ('South America'), ('South America'), ('South America'), ('South America'),
     ('Africa'), ('Africa'), ('Africa'), ('Africa'), ('Africa'),
     ('Oceania'), ('Oceania'), ('Oceania'), ('Oceania'), ('Oceania');
+
+CREATE TABLE trips_claims (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    trip_id INT NOT NULL,
+    claimed_by INT NOT NULL,
+    claimed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expired BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,
+    FOREIGN KEY (claimed_by) REFERENCES moderators(moderator_id) ON DELETE CASCADE,
+    INDEX idx_trip_id (trip_id)
+);
+
+CREATE TABLE trips_acknowledgements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    trip_id INT NOT NULL,
+    acknowledged_by INT NOT NULL,
+    acknowledged_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE,
+    FOREIGN KEY (acknowledged_by) REFERENCES moderators(moderator_id) ON DELETE CASCADE,
+    INDEX idx_trip_id (trip_id)
+);
