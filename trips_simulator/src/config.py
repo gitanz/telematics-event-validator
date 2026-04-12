@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-def load_config() -> None:
+def load_env() -> None:
     if os.getenv('APP_ENV') is None:
         raise Exception("APP_ENV environment variable is not set. Please set it to 'development', or 'test'.")
 
@@ -12,7 +12,7 @@ def load_config() -> None:
 
     load_dotenv()
 
-load_config()
+load_env()
 
 class Config:
     APP_ENV = os.getenv("APP_ENV", "development")

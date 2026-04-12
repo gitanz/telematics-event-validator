@@ -1,0 +1,38 @@
+name: "Trip Ingestion Service"
+
+services:
+  trip-ingestion-service:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ../src/:/app
+    working_dir: /app
+    container_name: trip-ingestion-service
+
+  trip-queue:
+    image: rabbitmq:management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    container_name: trip-queue
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+  trip-database:
+    image: mysql:8.0
+    platform: linux/amd64
+    container_name: trip-database
+    command: --init-file /init.sql
+    ports:
+      - "33066:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./sql/init.sql:/init.sql
+      - ../../trip-db-data:/var/lib/sql

@@ -13,8 +13,8 @@ def test_stop_creation():
 def test_trip_creation():
     print(os.getenv('APP_ENV'))
     trip = Trip(location="Europe")
-    assert trip.id is not None
-    assert isinstance(trip.id, str)
+    assert trip.trip_id is not None
+    assert isinstance(trip.trip_id, str)
     assert trip.location == "Europe"
     assert trip.country is None
     assert trip.start is None

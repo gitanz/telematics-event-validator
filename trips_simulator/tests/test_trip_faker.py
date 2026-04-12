@@ -11,7 +11,7 @@ def test_trip_faker_yields_valid_trip():
     trip = next(trip_generator)
 
     assert isinstance(trip, Trip)
-    assert trip.id is not None
+    assert trip.trip_id is not None
     assert trip.location is not None
     assert isinstance(trip.start, Stop)
     assert trip.stops

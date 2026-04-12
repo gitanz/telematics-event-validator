@@ -28,5 +28,5 @@ Below a high level of how it will be handled.
 ##### Components 
 
 1. Trip Simulator Service
-2. Trip Consumer
+2. Trip Ingestion Service
 3.

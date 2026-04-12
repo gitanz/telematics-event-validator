@@ -1,0 +1,9 @@
+uvicorn
+fastapi
+python-dotenv
+aio-pika
+pytest
+pytest-asyncio
+pymysql
+sqlalchemy
+cryptography

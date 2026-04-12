@@ -24,7 +24,7 @@ class Stop:
 
 @dataclass
 class Trip:
-    id: str = field(default_factory=lambda: uuid.uuid4().hex)
+    trip_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     location: str = ''
     country: Optional[str] = None
     start: Optional[Stop] = None
@@ -45,7 +45,7 @@ class Trip:
 
     def to_dict(self) -> dict:
         return {
-            "id": self.id,
+            "id": self.trip_id,
             "location": self.location,
             "country": self.country,
             "start": self.start.to_dict() if self.start else None,
