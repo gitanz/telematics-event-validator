@@ -1,0 +1,10 @@
+uvicorn
+fastapi
+python-dotenv
+aio-pika
+pytest
+pytest-asyncio
+pymysql
+sqlalchemy
+cryptography
+PyJWT>=2.0.0

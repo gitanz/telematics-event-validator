@@ -1,0 +1,28 @@
+name: "Trip Review Service"
+
+services:
+  trip-review-service:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8010:80"
+    environment:
+      - APP_ENV=development
+    volumes:
+      - ../src/:/app
+    working_dir: /app
+    container_name: trip-review-service
+
+  test-trip-database:
+    image: mysql:8.0
+    platform: linux/amd64
+    container_name: test-trip-database
+    command: --init-file /init.sql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./sql/init.sql:/init.sql
+      - ../../test-trip-db-data:/var/lib/sql

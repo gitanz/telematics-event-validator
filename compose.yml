@@ -1,0 +1,55 @@
+name: trips-validation-platform
+services:
+  trip-simulator:
+    extends:
+      file: ./trip_simulator/docker/compose.yml
+      service: trip-simulator
+    networks:
+      - trip-validation-platform
+      - trip-simulator
+
+  trip-ingestion-service:
+    extends:
+      file: ./trip_ingestion_service/docker/compose.yml
+      service: trip-ingestion-service
+    networks:
+      - trip-validation-platform
+      - trip-ingestion-service
+
+  trip-queue:
+    extends:
+      file: ./trip_ingestion_service/docker/compose.yml
+      service: trip-queue
+    networks:
+      - trip-validation-platform
+      - trip-ingestion-service
+
+  trip-database:
+    extends:
+      file: ./trip_ingestion_service/docker/compose.yml
+      service: trip-database
+    networks:
+      - trip-validation-platform
+      - trip-ingestion-service
+
+  test-trip-database:
+    extends:
+      file: ./trip_review_service/docker/compose.yml
+      service: test-trip-database
+    networks:
+      - trip-validation-platform
+      - trip-review-service
+
+  trip-review-service:
+    extends:
+      file: ./trip_review_service/docker/compose.yml
+      service: trip-review-service
+    networks:
+      - trip-validation-platform
+      - trip-review-service
+
+networks:
+  trip-validation-platform:
+  trip-simulator:
+  trip-ingestion-service:
+  trip-review-service:
