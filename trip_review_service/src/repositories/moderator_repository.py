@@ -6,7 +6,7 @@ from models.moderator import Location, Moderator
 
 class ModeratorRepositoryInterface(ABC):
     @abstractmethod
-    def get_moderator(self, moderator_id: int, location: Location) -> Moderator:
+    def get_moderator(self, moderator_id: int, location: str) -> Moderator:
         pass
 
 
@@ -15,7 +15,7 @@ class MySQLModeratorRepository(ModeratorRepositoryInterface):
         self.connection = connection
 
 
-    def get_moderator(self, moderator_id: int, location: Location) -> Union[Moderator, None]:
+    def get_moderator(self, moderator_id: int, location: str) -> Union[Moderator, None]:
         fetch_moderator_sql = text("""
             SELECT * FROM moderators 
             WHERE moderator_id = :moderator_id and location = :location
@@ -23,7 +23,7 @@ class MySQLModeratorRepository(ModeratorRepositoryInterface):
 
         result = self.connection.execute(fetch_moderator_sql, {
             'moderator_id': moderator_id,
-            'location': location.value,
+            'location': location,
         })
 
         moderator = result.mappings().fetchone()

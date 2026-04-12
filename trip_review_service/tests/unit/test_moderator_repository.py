@@ -24,7 +24,7 @@ def test_get_moderator_found():
         })
 
         mysql_moderator_repository = MySQLModeratorRepository(connection)
-        fetched_moderator = mysql_moderator_repository.get_moderator(**(moderator.model_dump()))
+        fetched_moderator = mysql_moderator_repository.get_moderator(moderator.moderator_id, moderator.location.value)
 
         assert fetched_moderator is not None
         assert fetched_moderator.moderator_id == moderator.moderator_id
@@ -44,7 +44,7 @@ def test_get_moderator_not_found():
         )
         # No insert, so the moderator is not present
         mysql_moderator_repository = MySQLModeratorRepository(connection)
-        fetched_moderator = mysql_moderator_repository.get_moderator(**(moderator.model_dump()))
+        fetched_moderator = mysql_moderator_repository.get_moderator(moderator.moderator_id, moderator.location.value)
         assert fetched_moderator is None
     finally:
         transaction.rollback()

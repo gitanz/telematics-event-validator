@@ -9,7 +9,6 @@ class LoginUseCase:
         self.moderator_repository = moderator_repository
 
     def execute(self, moderator_id: int, location: str) -> str:
-        location = Location(location)
         moderator = self.moderator_repository.get_moderator(moderator_id, location)
         if moderator:
             return jwt_utils.create_jwt_token(moderator)
