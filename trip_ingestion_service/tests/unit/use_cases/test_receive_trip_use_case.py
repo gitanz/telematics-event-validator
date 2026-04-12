@@ -12,7 +12,7 @@ async def test_trip_is_pushed_to_queue():
 
     trip = Trip(
         trip_id="test_trip_123",
-        location="Test City",
+        location="Europe",
         country="Test Country",
         start=Stop(location="Start Location", timestamp="2024-01-01 10:00:00 UTC"),
         stops=[Stop(location="Stop 1", timestamp="2024-01-01 12:00:00 UTC")],

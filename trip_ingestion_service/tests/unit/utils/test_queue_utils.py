@@ -60,7 +60,7 @@ async def test_rabbitmq_queue_util_push():
     mock_channel.default_exchange = mock_exchange
     util = RabbitMQQueueUtil(connection=None, channel=mock_channel, queue_name='trips_test')
     trip = Trip(
-        trip_id='id', location='loc', country='IE',
+        trip_id='id', location='Europe', country='IE',
         start=None, stops=[], end=None
     )
     await util.push(trip)

@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+import logging
 
 from exceptions.exceptions import PushTripToQueueError
 from models.Trip import Trip
@@ -8,8 +9,14 @@ from config import queue_config
 
 app = FastAPI()
 
-@app.post("/v1/webhook/trips", status_code=201)
-async def queue_trip(trip: Trip):
+@app.post("/v1/webhook/trip", status_code=201)
+async def queue_trip(request: Request):
+    body = await request.json()
+    try:
+        trip = Trip(**body)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
     queue_util: QueueUtilInterface = await QueueUtilFactory(queue_config=queue_config).getQueueUtil()
     accept_trip_use_case = ReceiveTripUseCase(queue_util)
 

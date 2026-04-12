@@ -17,7 +17,7 @@ class Stop:
 
     def to_dict(self) -> dict:
         return {
-            "name": self.name,
+            "location": self.name,
             "timestamp": self.timestamp
         }
 
@@ -45,7 +45,7 @@ class Trip:
 
     def to_dict(self) -> dict:
         return {
-            "id": self.trip_id,
+            "trip_id": self.trip_id,
             "location": self.location,
             "country": self.country,
             "start": self.start.to_dict() if self.start else None,
