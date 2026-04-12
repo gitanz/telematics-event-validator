@@ -7,6 +7,7 @@ from config import DatabaseConfig
 from connections.database_connection import DatabaseConnection
 from exceptions.login_exceptions import LoginException
 from exceptions.trip_exceptions import TripNotFoundException, UnauthorizedTripException
+from middlewares import authorize_request
 from models.moderator import Moderator
 from repositories.moderator_repository import MySQLModeratorRepository
 from repositories.trip_repository import MySQLTripRepository
@@ -15,36 +16,10 @@ from use_cases.claim_trip import ClaimTripUseCase
 from use_cases.list_trips import ListTripsUseCase
 from use_cases.login import LoginUseCase
 from use_cases.review_trip import ReviewTripUseCase
-from utils.jwt_utils import decode_jwt_token
-
-
-def authorize_request(authorization: str = Header(...)) -> Moderator:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    token = authorization.split(" ", 1)[1]
-
-    try:
-        jwt_payload = decode_jwt_token(token)
-    except:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    connection = DatabaseConnection(DatabaseConfig()).connection
-    moderator_repository = MySQLModeratorRepository(connection=connection)
-
-    try:
-        moderator = moderator_repository.get_moderator(jwt_payload['moderator_id'], jwt_payload['location'])
-    finally:
-        connection.close()
-
-    if moderator is None:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    return moderator
 
 app = FastAPI()
 
-@app.post("/v1/login")
+@app.post("/api/v1/login")
 async def login(request: Request):
     body = await request.json()
     moderator_id = body.get("moderator_id")
@@ -63,7 +38,7 @@ async def login(request: Request):
 
     return { "token": jwt }
 
-@app.get("/v1/trips")
+@app.get("/api/v1/trips")
 async def trips(moderator: Moderator=Depends(authorize_request)):
     connection = DatabaseConnection(DatabaseConfig()).connection
     trip_repository = MySQLTripRepository(connection=connection)
@@ -77,7 +52,7 @@ async def trips(moderator: Moderator=Depends(authorize_request)):
 
     return { "trips": [trip.model_dump() for trip in trips ] }
 
-@app.get("/v1/trips/{trip_id}")
+@app.get("/api/v1/trips/{trip_id}")
 async def trip(trip_id: str, moderator: Moderator=Depends(authorize_request)):
     connection = DatabaseConnection(DatabaseConfig()).connection
 
@@ -97,7 +72,7 @@ async def trip(trip_id: str, moderator: Moderator=Depends(authorize_request)):
 
     return { "trip": trip.model_dump() }
 
-@app.patch("/v1/trips/{trip_id}/claim")
+@app.patch("/api/v1/trips/{trip_id}/claim")
 async def claim(trip_id: str, moderator: Moderator=Depends(authorize_request)):
     connection = DatabaseConnection(DatabaseConfig()).connection
     trip_repository = MySQLTripRepository(connection=connection)
@@ -117,7 +92,7 @@ async def claim(trip_id: str, moderator: Moderator=Depends(authorize_request)):
 
     return { "success": True if claim_success else False }
 
-@app.patch("/v1/trips/{trip_id}/acknowledge")
+@app.patch("/api/v1/trips/{trip_id}/acknowledge")
 async def acknowledge(trip_id: str, moderator=Depends(authorize_request)):
     connection = DatabaseConnection(DatabaseConfig()).connection
     trip_repository = MySQLTripRepository(connection=connection)
