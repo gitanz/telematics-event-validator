@@ -10,7 +10,7 @@ class ReviewTripUseCase:
     def execute(self, trip_id: str, moderator: Moderator):
         trip = self.trip_repository.get_trip(
             trip_id=trip_id,
-            location=moderator.location.value
+            moderator=moderator
         )
 
         if not trip:

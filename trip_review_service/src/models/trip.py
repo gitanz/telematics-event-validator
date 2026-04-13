@@ -24,3 +24,7 @@ class Trip(BaseModel):
     start: Optional[Stop] = None
     stops: List[Stop] = Field(default_factory=list)
     end: Optional[Stop] = None
+    claimed_by: Optional[int] = None
+    claimed_at: Optional[datetime] = None
+    acknowledged_by: Optional[int] = None
+    acknowledged_at: Optional[datetime] = None

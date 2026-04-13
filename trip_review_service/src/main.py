@@ -2,8 +2,10 @@ import logging
 import traceback
 
 from fastapi import FastAPI, Request, HTTPException, Depends, Header
+from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import Response
 
-from config import DatabaseConfig
+from config import DatabaseConfig, jwt_config
 from connections.database_connection import DatabaseConnection
 from exceptions.login_exceptions import LoginException
 from exceptions.trip_exceptions import TripNotFoundException, UnauthorizedTripException
@@ -19,8 +21,20 @@ from use_cases.review_trip import ReviewTripUseCase
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:4200",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.post("/api/v1/login")
-async def login(request: Request):
+async def login(request: Request, response: Response):
     body = await request.json()
     moderator_id = body.get("moderator_id")
     location = body.get("location")
@@ -36,6 +50,16 @@ async def login(request: Request):
     finally:
         connection.close()
 
+    response.set_cookie(
+        key="authToken",
+        httponly=True,
+        value=jwt,
+        path='/',
+        max_age=jwt_config.jwt_expire_seconds,
+        samesite="none",
+        secure=True
+    )
+
     return { "token": jwt }
 
 @app.get("/api/v1/trips")
@@ -44,13 +68,26 @@ async def trips(moderator: Moderator=Depends(authorize_request)):
     trip_repository = MySQLTripRepository(connection=connection)
     list_trip_use_case = ListTripsUseCase(trip_repository)
     try:
-        trips = list_trip_use_case.execute(moderator.location.value)
+        trips = list_trip_use_case.execute(moderator)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         connection.close()
 
-    return { "trips": [trip.model_dump() for trip in trips ] }
+    return {
+        "trips": [
+            {
+                "tripId": trip.trip_id,
+                "location": trip.location.value,
+                "startLocation": trip.start.location,
+                "startTimestamp": trip.start.timestamp,
+                "endLocation": trip.end.location,
+                "endTimestamp": trip.end.timestamp,
+            }
+
+            for trip in trips
+        ]
+    }
 
 @app.get("/api/v1/trips/{trip_id}")
 async def trip(trip_id: str, moderator: Moderator=Depends(authorize_request)):
@@ -66,11 +103,25 @@ async def trip(trip_id: str, moderator: Moderator=Depends(authorize_request)):
     except UnauthorizedTripException as e:
         raise HTTPException(status_code=403, detail="Forbidden")
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         connection.close()
 
-    return { "trip": trip.model_dump() }
+    return {
+        "tripId": trip.trip_id,
+        "location": trip.location.value,
+        "startLocation": trip.start.location,
+        "startTimestamp": trip.start.timestamp,
+        "stops": trip.stops,
+        "endLocation": trip.end.location,
+        "endTimestamp": trip.end.timestamp,
+        "claimedBy": trip.claimed_by,
+        "claimedAt": trip.claimed_at,
+        "acknowledgedBy": trip.acknowledged_by,
+        "acknowledgedAt": trip.acknowledged_at,
+    }
+
 
 @app.patch("/api/v1/trips/{trip_id}/claim")
 async def claim(trip_id: str, moderator: Moderator=Depends(authorize_request)):
