@@ -57,7 +57,8 @@ class MySQLTripRepository(TripRepositoryInterface):
                 ) AND
                 (
                     trips_acknowledgements.trip_id IS NULL  -- unacknowledged trips only
-                ) 
+                ) AND
+                trips.created_at > DATE_SUB(CURDATE(), INTERVAL 1 DAY) -- created more than 1 day ago
                 
         """)
 
@@ -75,8 +76,7 @@ class MySQLTripRepository(TripRepositoryInterface):
         print(trip_with_stops[0])
 
         trip = trip_with_stops[0]
-        # print(trip.unique_id)
-        # Ensure trip_id (unique_id) is present
+
         if trip["unique_id"] is None:
             raise TripNotFoundException("Trip unique_id is missing in the database result.")
 
@@ -117,7 +117,8 @@ class MySQLTripRepository(TripRepositoryInterface):
                 ) AND
                 (
                     trips_acknowledgements.trip_id IS NULL  -- unacknowledged trips only
-                )
+                ) AND
+                trips.created_at > DATE_SUB(CURDATE(), INTERVAL 1 DAY) -- created more than 1 day ago
         """)
 
         result = self.connection.execute(fetch_trips_sql, {
@@ -163,7 +164,9 @@ class MySQLTripRepository(TripRepositoryInterface):
                     ) AND
                     (
                         trips_acknowledgements.trip_id IS NULL  -- unacknowledged trips only
-                    )
+                    ) AND
+                    trips.created_at > DATE_SUB(CURDATE(), INTERVAL 1 DAY) -- created more than 1 day ago
+                    
                 FOR UPDATE
             """)
 
@@ -216,7 +219,8 @@ class MySQLTripRepository(TripRepositoryInterface):
                         trips_claims.claimed_by = :moderator  AND -- claimed by current moderator
                         trips_claims.claimed_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) -- within last 15 minutes
                     ) AND
-                    trips_acknowledgements.trip_id IS NULL
+                    trips_acknowledgements.trip_id IS NULL AND
+                    trips.created_at > DATE_SUB(CURDATE(), INTERVAL 1 DAY) -- created more than 1 day ago
                 FOR UPDATE
             """)
 

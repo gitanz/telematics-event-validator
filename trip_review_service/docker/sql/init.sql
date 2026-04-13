@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS trips (
     start_location VARCHAR(255) NULL,
     start_datetime DATETIME NULL,
     end_location VARCHAR(255) NULL,
-    end_datetime DATETIME NULL
+    end_datetime DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 );
 
 CREATE INDEX idx_location_country ON trips(location, country);
