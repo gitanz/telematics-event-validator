@@ -65,4 +65,8 @@ export class TripDetails implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  protected closeDetails() {
+    this.homePageService.clearSelectedTrip()
+  }
 }

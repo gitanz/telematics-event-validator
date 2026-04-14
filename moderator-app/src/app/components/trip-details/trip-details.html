@@ -39,13 +39,6 @@
         </mat-list-item>
       }
 
-      @if(!trip.claimedBy) {
-        <div style="display: flex; justify-content: flex-end; margin-right: 20px;">
-          <button mat-button (click)="claimTrip(trip.tripId)"> Claim </button>
-        </div>
-
-      }
-
       @if(trip.acknowledgedBy) {
         <div mat-subheader> Acknowledged </div>
 
@@ -55,11 +48,15 @@
         </mat-list-item>
       }
 
-      @if(trip.claimedBy && !trip.acknowledgedBy) {
-        <div style="display: flex; justify-content: flex-end;margin-right: 20px;">
-          <button mat-button (click)="acknowledgeTrip(trip.tripId)"> Acknowledge </button>
-        </div>
-      }
+      <div style="display: flex; justify-content: space-between;margin-right: 20px;">
+        <button mat-button (click)="closeDetails()"> Close </button>
+        @if(!trip.claimedBy) {
+            <button mat-button (click)="claimTrip(trip.tripId)"> Claim </button>
+        }
+        @if(trip.claimedBy && !trip.acknowledgedBy) {
+            <button mat-button (click)="acknowledgeTrip(trip.tripId)"> Acknowledge </button>
+        }
+      </div>
     </div>
 
   </mat-list>
