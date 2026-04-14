@@ -20,4 +20,4 @@ class TripFaker:
             trip.set_end(Stop.from_values(name=faker.city(), timestamp=faker.date_time_this_year()))
 
             yield trip
-            time.sleep(1)
+            time.sleep(10)
