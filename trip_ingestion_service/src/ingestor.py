@@ -21,9 +21,9 @@ class Ingestor:
                 if message:
                     trip = Trip.model_validate_json(message.body.decode())
                     self.trip_repository.insert(trip)
+                    print(f"Trip ingested: {trip.trip_id}")
+                    logging.info('OK: Trip ingested successfully')
                     await message.ack()
-
-                logging.info('OK: Trip ingested successfully')
 
             except Exception as e:
                 logging.error(f"Error ingesting trip: {str(e)}")
