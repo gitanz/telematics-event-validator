@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Any
 
 from aio_pika import connect_robust, Message
+from aio_pika.abc import AbstractIncomingMessage
 from aio_pika.exceptions import QueueEmpty
 
 from config import QueueConfig
@@ -14,7 +15,7 @@ class QueueUtilInterface(ABC):
         pass
 
     @abstractmethod
-    async def pop(self) -> Union[Trip, None]:
+    async def pop(self) -> Union[Any, None]:
         """Pop a Trip object from the queue."""
         pass
 
@@ -51,16 +52,14 @@ class RabbitMQQueueUtil(QueueUtilInterface):
         message = Message(body=trip.model_dump_json().encode())
         await self.channel.default_exchange.publish(message, routing_key=self.queue_name)
 
-    async def pop(self) -> Union[Trip, None]:
+    async def pop(self) -> Union[AbstractIncomingMessage, None]:
         queue = await self.channel.declare_queue(self.queue_name, passive=True)
 
         try:
             message = await queue.get(timeout=1)
             if message is None:
                 return None
-            await message.ack()
-            trip = Trip.model_validate_json(message.body.decode())
-            return trip
+            return message
         except QueueEmpty as e:
             return None
 

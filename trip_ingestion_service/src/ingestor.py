@@ -1,9 +1,10 @@
 import logging
-from time import sleep
-from typing import List, Union
+
+from aio_pika.abc import AbstractIncomingMessage
+from typing import Union
 
 from config import queue_config, database_config
-from models import Trip
+from models.Trip import Trip
 from repositories.repository import TripRepository, MySQLTripRepository
 from utils.queue_utils import QueueUtilFactory, QueueUtilInterface
 import asyncio
@@ -14,13 +15,21 @@ class Ingestor:
         self.trip_repository = trip_repository
 
     async def ingest_trips(self):
-
         while True:
-            trip: Union[Trip, None] = await self.queue_util.pop()
-            if trip:
-                self.trip_repository.insert(trip)
-            logging.info('OK: Trip ingested successfully')
-            await asyncio.sleep(1)
+            try:
+                message: Union[AbstractIncomingMessage, None] = await self.queue_util.pop()
+                if message:
+                    trip = Trip.model_validate_json(message.body.decode())
+                    self.trip_repository.insert(trip)
+                    await message.ack()
+
+                logging.info('OK: Trip ingested successfully')
+
+            except Exception as e:
+                logging.error(f"Error ingesting trip: {str(e)}")
+
+            finally:
+                await asyncio.sleep(1)
 
 async def run_ingestor():
     queue_util: QueueUtilInterface = await QueueUtilFactory(queue_config).getQueueUtil()
