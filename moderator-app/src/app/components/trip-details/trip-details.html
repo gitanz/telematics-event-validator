@@ -1,0 +1,66 @@
+@if(trip) {
+  <mat-list>
+    <div mat-subheader> Start </div>
+
+    <mat-list-item>
+      <div matListItemTitle>{{trip.startLocation}}</div>
+      <div matListItemLine>{{trip.startTimestamp}}</div>
+    </mat-list-item>
+
+    <mat-divider></mat-divider>
+
+    <div mat-subheader> Stops </div>
+    @for (stop of trip.stops; track stop.location) {
+      <mat-list-item>
+        <div matListItemTitle>{{stop.location}}</div>
+        <div matListItemLine>{{stop.timestamp}}</div>
+      </mat-list-item>
+    }
+
+    <mat-divider></mat-divider>
+
+    <div mat-subheader> End </div>
+
+    <mat-list-item>
+      <div matListItemTitle>{{trip.endLocation}}</div>
+      <div matListItemLine>{{trip.endTimestamp}}</div>
+    </mat-list-item>
+
+    <mat-divider></mat-divider>
+
+    <div>
+
+
+      @if(trip.claimedBy) {
+        <div mat-subheader> Claimed </div>
+        <mat-list-item>
+          <div matListItemTitle>User: {{trip.claimedBy}}</div>
+          <div matListItemLine>Time: {{trip.claimedAt}}</div>
+        </mat-list-item>
+      }
+
+      @if(!trip.claimedBy) {
+        <div style="display: flex; justify-content: flex-end; margin-right: 20px;">
+          <button mat-button (click)="claimTrip(trip.tripId)"> Claim </button>
+        </div>
+
+      }
+
+      @if(trip.acknowledgedBy) {
+        <div mat-subheader> Acknowledged </div>
+
+        <mat-list-item>
+          <div matListItemTitle> User: {{trip.acknowledgedBy}}</div>
+          <div matListItemLine> Time: {{trip.acknowledgedAt}}</div>
+        </mat-list-item>
+      }
+
+      @if(trip.claimedBy && !trip.acknowledgedBy) {
+        <div style="display: flex; justify-content: flex-end;margin-right: 20px;">
+          <button mat-button (click)="acknowledgeTrip(trip.tripId)"> Acknowledge </button>
+        </div>
+      }
+    </div>
+
+  </mat-list>
+}

@@ -1,0 +1,39 @@
+<cdk-virtual-scroll-viewport class="container" [itemSize]="10" [maxBufferPx]="1200" [minBufferPx]="400">
+
+  <table mat-table [dataSource]="dataSource" [trackBy]="trackBy">
+
+    <ng-container matColumnDef="tripId">
+      <th mat-header-cell *matHeaderCellDef> Trip ID </th>
+      <td mat-cell *matCellDef="let element"> {{element.tripId}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="location">
+      <th mat-header-cell *matHeaderCellDef> Location </th>
+      <td mat-cell *matCellDef="let element"> {{element.location}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="startLocation">
+      <th mat-header-cell *matHeaderCellDef> Start Location </th>
+      <td mat-cell *matCellDef="let element"> {{element.startLocation}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="startTimestamp">
+      <th mat-header-cell *matHeaderCellDef> Start Time </th>
+      <td mat-cell *matCellDef="let element"> {{element.startTimestamp}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="endLocation">
+      <th mat-header-cell *matHeaderCellDef> End Location </th>
+      <td mat-cell *matCellDef="let element"> {{element.endLocation}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="endTimestamp">
+      <th mat-header-cell *matHeaderCellDef> End Time </th>
+      <td mat-cell *matCellDef="let element"> {{element.endTimestamp}} </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let trip; columns: displayedColumns;" [class.selected]="(homePageService.selectedTrip$ | async)?.tripId === trip.tripId" (click)="viewTrip(trip.tripId)"></tr>
+  </table>
+
+</cdk-virtual-scroll-viewport>

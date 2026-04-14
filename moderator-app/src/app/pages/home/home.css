@@ -1,0 +1,12 @@
+.layout {
+  display: flex;
+  gap: 24px;
+}
+
+.layout > .trips {
+  flex: 1 1 auto;
+}
+
+.layout > .trip-details {
+  flex: 0 0 320px;
+}

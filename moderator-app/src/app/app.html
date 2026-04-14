@@ -1,0 +1,15 @@
+<mat-toolbar>
+  <span>Trip Moderation</span>
+  <span class="spacer"></span>
+  <button mat-button (click)="logout()">
+    Logout
+  </button>
+</mat-toolbar>
+
+@if (appService.loading$ | async) {
+  <mat-progress-bar mode="indeterminate"/>
+}
+
+<div class="body">
+  <router-outlet></router-outlet>
+</div>

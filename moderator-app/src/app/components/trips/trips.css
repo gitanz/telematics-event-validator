@@ -1,0 +1,47 @@
+.container {
+  height: calc(100vh - var(--mat-toolbar-standard-height, 64px));
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+tr.mat-mdc-header-row {
+  background-color: #f0f0f0;
+  height: 35px;
+}
+
+tr.mat-mdc-row {
+  border-bottom: 1px solid #ddd;
+  height: 35px;
+  cursor: pointer;
+}
+
+tr.mat-mdc-row:nth-child(odd) {
+  background-color: #f7f7f7;
+}
+
+tr.mat-mdc-row:nth-child(even) {
+  background-color: #efefef;
+}
+
+tr.mat-mdc-row.selected {
+  background-color: #1976d2 !important;
+  color: white;
+}
+
+th.mat-mdc-header-cell, td.mat-mdc-cell {
+  border-bottom: none;
+}
+
+.btn-sm {
+  font-size: 12px;
+  line-height: 28px;
+  height: 28px;
+  padding: 0 10px;
+}
+

@@ -1,0 +1,10 @@
+<div class="layout">
+  <div class="trips">
+    <app-trips />
+  </div>
+  @if (homePageService.selectedTrip$ | async; as trip) {
+    <div class="trip-details" >
+      <app-trip-details [trip]="trip" />
+    </div>
+  }
+</div>
