@@ -93,12 +93,12 @@ class MySQLTripRepository(TripRepositoryInterface):
             'moderator': moderator.moderator_id,
         })
 
+        self.connection.commit()
+
         trip_with_stops = result.mappings().fetchall()
 
         if not len(trip_with_stops):
             return None
-
-        print(trip_with_stops[0])
 
         trip = trip_with_stops[0]
 
@@ -307,7 +307,7 @@ class MySQLTripRepository(TripRepositoryInterface):
             })
 
             transaction.commit()
+            return True
         except Exception as e:
             transaction.rollback()
             raise e
-        return True

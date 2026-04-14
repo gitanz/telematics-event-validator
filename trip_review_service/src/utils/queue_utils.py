@@ -58,7 +58,10 @@ class RabbitMQQueueUtil(QueueUtilInterface):
             "event": "claim",
             "trip": trip.model_dump()
         }
-        message = Message(body=json.dumps(trip_transaction, default=str).encode())
+        message = Message(
+            body=json.dumps(trip_transaction, default=str, ).encode(),
+            expiration=10000
+        )
 
         await self.channel.default_exchange.publish(message, routing_key=self.queue_name)
 

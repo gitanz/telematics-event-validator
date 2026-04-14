@@ -1,3 +1,5 @@
+import traceback
+
 from models.moderator import Moderator
 from repositories.trip_repository import TripRepositoryInterface
 from utils.queue_utils import QueueUtilInterface
@@ -10,9 +12,11 @@ class ClaimTripUseCase:
 
     async def execute(self, trip_id: str, moderator: Moderator):
         try:
-            self.trip_repository.claim_trip(trip_id, moderator)
+            claimed = self.trip_repository.claim_trip(trip_id, moderator)
             trip = self.trip_repository.get_trip(trip_id, moderator)
             await self.queue_util.push_claim(trip)
 
+            return claimed
         except Exception as e:
+            traceback.print_exc()
             raise e
