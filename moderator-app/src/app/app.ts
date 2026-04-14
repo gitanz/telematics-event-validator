@@ -5,9 +5,8 @@ import { MatProgressBar } from '@angular/material/progress-bar';
 import { LoginService } from './services/login-service';
 import { AppService } from './services/app-service';
 import { AsyncPipe } from '@angular/common';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButton } from '@angular/material/button';
 import { LocalStorage } from './services/local-storage';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -40,8 +39,11 @@ export class App {
       next: () => {
         this.loginService.setLoggedOut();
         this.localStorage.setLoggedIn(false);
+      },
+      error: () => {
+        this.loginService.setLoggedOut();
+        this.localStorage.setLoggedIn(false);
       }
-    })
-      .unsubscribe();
+    });
   }
 }

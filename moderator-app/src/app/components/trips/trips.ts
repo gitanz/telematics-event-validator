@@ -75,10 +75,7 @@ export class Trips implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    interval(1000).pipe(
-      switchMap(() => this.tripService.getTrips()),
-      takeUntil(this.destroy$),
-    ).subscribe({
+    this.tripService.getTrips().subscribe({
       next: (trips) => {
         this.dataSource = trips;
       },

@@ -38,14 +38,10 @@ export class LoginService {
       location: location,
     };
 
-    return this.http.post<LoginResponse>(`${environment.apiUrl}/login`, payload, {
-      withCredentials: true,
-    });
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/login`, payload);
   }
 
   logout() {
-    return this.http.post(`${environment.apiUrl}/logout`, {}, {
-      withCredentials: true
-    });
+    return this.http.post(`${environment.apiUrl}/logout`, {});
   }
 }

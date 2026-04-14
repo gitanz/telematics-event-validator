@@ -1,5 +1,6 @@
 import logging
 import traceback
+from datetime import datetime, timezone, timedelta
 
 from fastapi import FastAPI, Request, HTTPException, Depends, Header
 from starlette.middleware.cors import CORSMiddleware
@@ -62,6 +63,11 @@ async def login(request: Request, response: Response):
     )
 
     return { "token": jwt }
+
+@app.post("/api/v1/logout")
+async def logout(response: Response):
+    response.set_cookie(key="authToken", path='/', expires=datetime.now(timezone.utc) - timedelta(seconds=jwt_config.jwt_expire_seconds))
+    return { "message": "Logged out successfully" }
 
 @app.get("/api/v1/trips")
 async def trips(moderator: Moderator=Depends(authorize_request)):
