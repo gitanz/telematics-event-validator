@@ -34,25 +34,37 @@ class MySQLTripRepository(TripRepositoryInterface):
         fetch_trip_sql = text("""
             SELECT 
                 trips.*, trip_stops.stop_location, trip_stops.stop_datetime,
-                trips_claims.*, trips_acknowledgements.*
+                latest_claims.*, trips_acknowledgements.*
             FROM trips
-            LEFT JOIN trip_stops ON trips.id = trip_stops.trip_id 
-            LEFT JOIN trips_claims ON trips.id = trips_claims.trip_id
+            LEFT JOIN trip_stops ON trips.id = trip_stops.trip_id
+             
+            LEFT JOIN (
+                SELECT trips_claims.* FROM trips_claims
+                INNER JOIN (
+                    SELECT trip_id, MAX(claimed_at) as claimed_at 
+                    FROM trips_claims
+                    GROUP BY trip_id
+                ) as latest_trip_id_claim_tuple 
+                ON 
+                trips_claims.trip_id = latest_trip_id_claim_tuple.trip_id AND 
+                trips_claims.claimed_at = latest_trip_id_claim_tuple.claimed_at
+            ) as latest_claims ON trips.id = latest_claims.trip_id
+            
             LEFT JOIN trips_acknowledgements ON trips.id = trips_acknowledgements.trip_id
             WHERE 
                 trips.unique_id = :unique_id AND 
                 trips.location = :location AND
                 (
-                    (trips_claims.trip_id IS NULL) OR
+                    (latest_claims.trip_id IS NULL) OR
                     (   
-                        trips_claims.trip_id IS NOT NULL AND -- has claims 
-                        trips_claims.claimed_by = :moderator  AND -- claimed by current moderator
-                        trips_claims.claimed_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) -- claimed within last 15 minutes
+                        latest_claims.trip_id IS NOT NULL AND -- latest claim 
+                        latest_claims.claimed_by = :moderator  AND -- by current moderator
+                        latest_claims.claimed_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) -- within last 15 minutes
                     ) OR
                     (
-                        trips_claims.trip_id IS NOT NULL AND -- has claims
-                        trips_claims.claimed_by != :moderator AND  -- claimed by other moderator
-                        trips_claims.claimed_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE) -- claimed more than 15 minutes ago
+                        latest_claims.trip_id IS NOT NULL AND -- latest claim 
+                        latest_claims.claimed_by IS NOT NULL AND  -- by any moderator
+                        latest_claims.claimed_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE) --  more than 15 minutes ago
                     )
                 ) AND
                 (
@@ -98,21 +110,31 @@ class MySQLTripRepository(TripRepositoryInterface):
     def list_trips(self, moderator: Moderator) -> List[Trip]:
         fetch_trips_sql = text("""
             SELECT * FROM trips
-            LEFT JOIN trips_claims ON trips.id = trips_claims.trip_id
+            LEFT JOIN (
+                SELECT trips_claims.* FROM trips_claims
+                INNER JOIN (
+                    SELECT trip_id, MAX(claimed_at) as claimed_at 
+                    FROM trips_claims
+                    GROUP BY trip_id
+                ) as latest_trip_id_claim_tuple 
+                ON 
+                trips_claims.trip_id = latest_trip_id_claim_tuple.trip_id AND 
+                trips_claims.claimed_at = latest_trip_id_claim_tuple.claimed_at
+            ) latest_claims ON trips.id = latest_claims.trip_id
             LEFT JOIN trips_acknowledgements ON trips.id = trips_acknowledgements.trip_id
             WHERE 
                 trips.location = :location and
                 (
-                    (trips_claims.trip_id IS NULL) OR
+                    (latest_claims.trip_id IS NULL) OR
                     (   
-                        trips_claims.trip_id IS NOT NULL AND -- has claims 
-                        trips_claims.claimed_by = :moderator  AND -- claimed by current moderator
-                        trips_claims.claimed_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) -- within last 15 minutes
+                        latest_claims.trip_id IS NOT NULL AND -- latest claim 
+                        latest_claims.claimed_by = :moderator  AND -- by current moderator
+                        latest_claims.claimed_at >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) -- within last 15 minutes
                     ) OR
                     (
-                        trips_claims.trip_id IS NOT NULL AND -- has claims
-                        trips_claims.claimed_by != :moderator AND  -- claimed by other moderator
-                        trips_claims.claimed_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE) --  more than 15 minutes ago
+                        latest_claims.trip_id IS NOT NULL AND -- latest claim 
+                        latest_claims.claimed_by IS NOT NULL AND  -- by other moderator
+                        latest_claims.claimed_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE) --  more than 15 minutes ago
                     )
                 ) AND
                 (
@@ -146,7 +168,7 @@ class MySQLTripRepository(TripRepositoryInterface):
             transaction = self.connection.begin()
         try:
             trip_sql = text("""
-                SELECT trips.* FROM trips
+                SELECT trips.*, trips_claims.id as claim_id FROM trips
                 LEFT JOIN trips_claims ON
                     trips.id = trips_claims.trip_id
                 LEFT JOIN trips_acknowledgements ON 
@@ -158,8 +180,7 @@ class MySQLTripRepository(TripRepositoryInterface):
                         (trips_claims.trip_id IS NULL) OR -- no claims
                         (
                             trips_claims.trip_id IS NOT NULL AND -- has claims
-                            trips_claims.claimed_by != :moderator AND  -- claimed by other moderator
-                            trips_claims.claimed_at < DATE_SUB(NOW(), INTERVAL 15 MINUTE) --  more than 15 minutes ago
+                            trips_claims.claimed_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE) --  within 15 minutes ago
                         )
                     ) AND
                     (
@@ -180,6 +201,9 @@ class MySQLTripRepository(TripRepositoryInterface):
 
             if not trip:
                 raise UnauthorizedTripException()
+
+            if trip["claim_id"] is not None:
+                raise UnauthorizedTripException("Trip is already claimed.")
 
             claim_sql = text("""
                 INSERT INTO trips_claims (trip_id, claimed_by, claimed_at)

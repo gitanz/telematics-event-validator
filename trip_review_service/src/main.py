@@ -129,10 +129,10 @@ async def trip(trip_id: str, moderator: Moderator=Depends(authorize_request)):
         "stops": trip.stops,
         "endLocation": trip.end.location,
         "endTimestamp": trip.end.timestamp,
-        "claimedBy": trip.claimed_by,
-        "claimedAt": trip.claimed_at,
-        "acknowledgedBy": trip.acknowledged_by,
-        "acknowledgedAt": trip.acknowledged_at,
+        "claimedBy": trip.claimed_by if trip.claimed_by == moderator.moderator_id else None,
+        "claimedAt": trip.claimed_at if trip.claimed_by == moderator.moderator_id else None,
+        "acknowledgedBy": trip.acknowledged_by if trip.acknowledged_by == moderator.moderator_id else None,
+        "acknowledgedAt": trip.acknowledged_at if trip.acknowledged_by == moderator.moderator_id else None,
     }
 
 
