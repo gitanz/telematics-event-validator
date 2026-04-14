@@ -32,9 +32,20 @@ class DatabaseConfig:
 database_config = DatabaseConfig()
 
 
+class QueueConfig:
+    driver: Optional[str] = os.getenv("QUEUE_DRIVER")
+    host: Optional[str] = os.getenv("QUEUE_HOST", "localhost")
+    port: Optional[int] = int(os.getenv("QUEUE_PORT", "5672"))
+    user: Optional[str] = os.getenv("QUEUE_USER", "guest")
+    password: Optional[str] = os.getenv("QUEUE_PASSWORD", "guest")
+    batch_size: Optional[int] = int(os.getenv("QUEUE_BATCH_SIZE", "10"))
+
+queue_config  = QueueConfig()
+
 class Config:
     env: str = os.getenv("APP_ENV", "development")
     db_config: DatabaseConfig = database_config
     jwt_config: JWTConfig = jwt_config
+    queue_config: QueueConfig = queue_config
 
 config: Config = Config()

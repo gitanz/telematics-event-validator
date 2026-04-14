@@ -1,12 +1,15 @@
+import asyncio
+import json
 import logging
 import traceback
 from datetime import datetime, timezone, timedelta
 
+from aio_pika import IncomingMessage
 from fastapi import FastAPI, Request, HTTPException, Depends, Header
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import Response
+from starlette.responses import Response, StreamingResponse
 
-from config import DatabaseConfig, jwt_config
+from config import DatabaseConfig, jwt_config, QueueConfig
 from connections.database_connection import DatabaseConnection
 from exceptions.login_exceptions import LoginException
 from exceptions.trip_exceptions import TripNotFoundException, UnauthorizedTripException
@@ -19,6 +22,7 @@ from use_cases.claim_trip import ClaimTripUseCase
 from use_cases.list_trips import ListTripsUseCase
 from use_cases.login import LoginUseCase
 from use_cases.review_trip import ReviewTripUseCase
+from utils.queue_utils import QueueUtilFactory
 
 app = FastAPI()
 
@@ -71,6 +75,7 @@ async def logout(response: Response):
 
 @app.get("/api/v1/trips")
 async def trips(moderator: Moderator=Depends(authorize_request)):
+    print(moderator.moderator_id)
     connection = DatabaseConnection(DatabaseConfig()).connection
     trip_repository = MySQLTripRepository(connection=connection)
     list_trip_use_case = ListTripsUseCase(trip_repository)
@@ -98,6 +103,7 @@ async def trips(moderator: Moderator=Depends(authorize_request)):
 
 @app.get("/api/v1/trips/{trip_id}")
 async def trip(trip_id: str, moderator: Moderator=Depends(authorize_request)):
+    print(moderator.moderator_id)
     connection = DatabaseConnection(DatabaseConfig()).connection
 
     trip_repository = MySQLTripRepository(connection=connection)
@@ -134,9 +140,10 @@ async def trip(trip_id: str, moderator: Moderator=Depends(authorize_request)):
 async def claim(trip_id: str, moderator: Moderator=Depends(authorize_request)):
     connection = DatabaseConnection(DatabaseConfig()).connection
     trip_repository = MySQLTripRepository(connection=connection)
-    claim_trip_use_case = ClaimTripUseCase(trip_repository)
+    queue_util = await QueueUtilFactory(QueueConfig()).getQueueUtil()
+    claim_trip_use_case = ClaimTripUseCase(trip_repository, queue_util)
     try:
-        claim_success = claim_trip_use_case.execute(trip_id, moderator)
+        claim_success = await claim_trip_use_case.execute(trip_id, moderator)
     except TripNotFoundException as e:
         raise HTTPException(status_code=404, detail="Trip not found")
     except UnauthorizedTripException as e:
@@ -170,3 +177,31 @@ async def acknowledge(trip_id: str, moderator=Depends(authorize_request)):
         connection.close()
 
     return { "success": True if acknowledge_success else False }
+
+@app.get("/api/v1/events")
+async def events(moderator=Depends(authorize_request)):
+    queue_util = await QueueUtilFactory(QueueConfig()).getQueueUtil()
+    async def event_generator():
+        while True:
+            message: IncomingMessage = await queue_util.pop()
+            if message is None:
+                continue
+
+            event = json.loads(message.body)
+
+            if  event["event"] == "claim" and event["trip"]["claimed_by"] == moderator.moderator_id:
+                await message.nack(requeue=True)
+                continue
+
+            response = {
+                "event": event["event"],
+                "tripId": event["trip"]["trip_id"],
+            }
+
+            yield f"data: {json.dumps(response)}\n\n"
+            await message.ack()
+            await asyncio.sleep(2)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+

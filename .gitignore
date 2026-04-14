@@ -13,3 +13,5 @@ __pycache__
 .DS_Store
 *.log
 trip-db-data
+supervisord.pid
+mcp.json
