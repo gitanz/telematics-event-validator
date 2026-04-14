@@ -8,10 +8,13 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install supervisor
 
 # Only copy the src directory into the container
-COPY ../src/ .
+COPY ./src/ .
+
+COPY docker/supervisord.conf /etc/supervisor/supervisord.conf
 
 EXPOSE 80
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--reload-dir", "/app"]
+ENTRYPOINT ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

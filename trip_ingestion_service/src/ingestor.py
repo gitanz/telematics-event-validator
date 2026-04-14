@@ -1,3 +1,4 @@
+import logging
 from time import sleep
 from typing import List, Union
 
@@ -18,8 +19,8 @@ class Ingestor:
             trip: Union[Trip, None] = await self.queue_util.pop()
             if trip:
                 self.trip_repository.insert(trip)
-
-            sleep(1)
+            logging.info('OK: Trip ingested successfully')
+            await asyncio.sleep(1)
 
 async def run_ingestor():
     queue_util: QueueUtilInterface = await QueueUtilFactory(queue_config).getQueueUtil()

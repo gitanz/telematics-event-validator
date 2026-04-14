@@ -52,13 +52,10 @@ class RabbitMQQueueUtil(QueueUtilInterface):
         await self.channel.default_exchange.publish(message, routing_key=self.queue_name)
 
     async def pop(self) -> Union[Trip, None]:
-        print('declaring queue')
         queue = await self.channel.declare_queue(self.queue_name, passive=True)
 
         try:
-            print('Waiting for messages...')
             message = await queue.get(timeout=1)
-            print('Message received')
             if message is None:
                 return None
             await message.ack()

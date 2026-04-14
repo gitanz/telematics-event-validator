@@ -7,6 +7,8 @@ services:
     networks:
       - trip-validation-platform
       - trip-simulator
+    depends_on:
+      - trip-ingestion-service
 
   trip-ingestion-service:
     extends:
@@ -15,6 +17,11 @@ services:
     networks:
       - trip-validation-platform
       - trip-ingestion-service
+    depends_on:
+      trip-queue:
+        condition: service_started
+      trip-database:
+        condition: service_healthy
 
   trip-queue:
     extends:
@@ -31,6 +38,11 @@ services:
     networks:
       - trip-validation-platform
       - trip-ingestion-service
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   test-trip-database:
     extends:
@@ -47,6 +59,9 @@ services:
     networks:
       - trip-validation-platform
       - trip-review-service
+    depends_on:
+      trip-database:
+        condition: service_healthy
 
 networks:
   trip-validation-platform:

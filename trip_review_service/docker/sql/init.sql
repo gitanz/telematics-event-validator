@@ -4,16 +4,16 @@ USE trips;
 CREATE TABLE IF NOT EXISTS trips (
     id INT AUTO_INCREMENT PRIMARY KEY,
     unique_id VARCHAR(255) NOT NULL,
-    location ENUM('North America', 'Europe', 'Asia', 'South America', 'Africa', 'Oceania') NULL,
+    location ENUM('North America', 'Europe', 'Asia', 'South America', 'Africa', 'Oceania') NOT NULL,
     country VARCHAR(255) NULL,
     start_location VARCHAR(255) NULL,
     start_datetime DATETIME NULL,
     end_location VARCHAR(255) NULL,
     end_datetime DATETIME NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_location_country ON trips(location, country);
+CREATE INDEX idx_location ON trips(location);
 CREATE INDEX idx_unique_id ON trips(unique_id);
 
 CREATE TABLE IF NOT EXISTS trip_stops (
