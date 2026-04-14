@@ -11,6 +11,9 @@ class TripRepository(ABC):
     def insert(self, data: Trip) -> None:
         pass
 
+    def prune(self):
+        pass
+
 
 class MySQLTripRepository(TripRepository):
     def __init__(self, config: DatabaseConfig) -> None:
@@ -60,3 +63,14 @@ class MySQLTripRepository(TripRepository):
             except Exception as e:
                 trans.rollback()
                 raise
+
+    def prune(self):
+
+        with self.engine.connect() as conn:
+            prune_sql = text(
+                """
+                DELETE FROM trips
+                WHERE created_at < NOW() - INTERVAL 2 DAY
+                """
+            )
+            conn.execute(prune_sql)
