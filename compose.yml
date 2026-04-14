@@ -63,8 +63,20 @@ services:
       trip-database:
         condition: service_healthy
 
+  moderator-app:
+    extends:
+      file: ./moderator-app/docker/compose.yml
+      service: moderator-app
+    networks:
+      - trip-validation-platform
+      - moderator-app
+    depends_on:
+      trip-review-service:
+        condition: service_started
+
 networks:
   trip-validation-platform:
   trip-simulator:
   trip-ingestion-service:
   trip-review-service:
+  moderator-app:
