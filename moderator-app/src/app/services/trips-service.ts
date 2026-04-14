@@ -1,13 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { map, Observable } from 'rxjs';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 import { Trip } from '../components/trips/trips';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TripsService {
+  public eventSource: EventSource | null = null;
+  private tripEventSubject = new BehaviorSubject<{ event: string, tripId: string } | null>(null);
+  public tripEvents$ = this.tripEventSubject.asObservable();
   constructor(private httpClient: HttpClient) {}
 
   getTrips(): Observable<Trip[]> {
@@ -32,5 +35,20 @@ export class TripsService {
       `${environment.apiUrl}/trips/${tripId}/acknowledge`,
       {},
     );
+  }
+
+  connectEventSource(): void {
+    this.eventSource = new EventSource(`${environment.apiUrl}/events`, { withCredentials: true });
+    this.eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      this.tripEventSubject.next(data);
+    };
+  }
+
+  closeEventSource(): void {
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
   }
 }

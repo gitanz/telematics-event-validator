@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import {
   MatCell,
   MatCellDef,
@@ -12,7 +12,7 @@ import {
   MatTable,
 } from '@angular/material/table';
 import { CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
-import { interval, Subject, switchMap, takeUntil } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { TripsService } from '../../services/trips-service';
 import { HomePageService } from '../../services/home-page-service';
 import { AsyncPipe } from '@angular/common';
@@ -72,12 +72,28 @@ export class Trips implements OnInit, OnDestroy {
   constructor(
     private tripService: TripsService,
     protected homePageService: HomePageService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
-    this.tripService.getTrips().subscribe({
-      next: (trips) => {
-        this.dataSource = trips;
+    this.tripService
+      .getTrips()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (trips) => {
+          this.dataSource = trips;
+        },
+      });
+
+    this.tripService.connectEventSource();
+    this.tripService.tripEvents$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (event) => {
+        if (!event) {
+          return;
+        }
+        this.dataSource = this.dataSource.filter((trip) => trip.tripId !== event.tripId);
+        this.cdr.detectChanges();
+        console.log('removing trip with id', event.tripId);
       },
     });
   }
@@ -85,6 +101,7 @@ export class Trips implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    this.tripService.closeEventSource();
   }
 
   protected viewTrip(tripId: string) {

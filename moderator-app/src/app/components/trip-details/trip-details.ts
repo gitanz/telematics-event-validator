@@ -1,9 +1,9 @@
-import { ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Trip } from '../trips/trips';
 import { TripsService } from '../../services/trips-service';
 import { MatDivider, MatList, MatListItem, MatListSubheaderCssMatStyler } from '@angular/material/list';
 import { MatButton } from '@angular/material/button';
-import { concatMap } from 'rxjs';
+import { concatMap, Subject, takeUntil } from 'rxjs';
 import { HomePageService } from '../../services/home-page-service';
 
 @Component({
@@ -12,14 +12,34 @@ import { HomePageService } from '../../services/home-page-service';
   templateUrl: './trip-details.html',
   styleUrl: './trip-details.css',
 })
-export class TripDetails {
+export class TripDetails implements OnInit, OnDestroy {
   @Input() trip: Trip | undefined;
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private homePageService: HomePageService,
     private tripService: TripsService,
     private cdr: ChangeDetectorRef
   ) {}
+
+  ngOnInit(): void {
+    this.tripService.tripEvents$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (event) => {
+          if (!event) {
+            return;
+          }
+
+          if(event.tripId === this.trip?.tripId) {
+            this.homePageService.clearSelectedTrip();
+          }
+
+          this.cdr.detectChanges();
+        },
+      });
+  }
 
   protected claimTrip(tripId: string) {
     this.tripService
@@ -39,5 +59,10 @@ export class TripDetails {
         this.homePageService.clearSelectedTrip();
         this.cdr.detectChanges();
       });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
