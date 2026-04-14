@@ -1,0 +1,9 @@
+node_modules
+package-lock.json
+dist
+.angular
+.git
+.gitignore
+*.md
+docker-compose.yml
+

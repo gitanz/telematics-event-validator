@@ -1,0 +1,9 @@
+name: "moderator-app"
+services:
+  moderator-app:
+    container_name: moderator-app
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8080:80"
