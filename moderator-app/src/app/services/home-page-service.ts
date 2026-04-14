@@ -12,4 +12,8 @@ export class HomePageService {
   setSelectedTrip(trip: Trip) {
       this.selectedTripSubject.next(trip);
   }
+
+  clearSelectedTrip() {
+    this.selectedTripSubject.next(null);
+  }
 }

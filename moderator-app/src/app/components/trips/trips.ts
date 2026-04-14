@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
   MatCell,
   MatCellDef,
@@ -12,6 +12,7 @@ import {
   MatTable,
 } from '@angular/material/table';
 import { CdkFixedSizeVirtualScroll, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { interval, Subject, switchMap, takeUntil } from 'rxjs';
 import { TripsService } from '../../services/trips-service';
 import { HomePageService } from '../../services/home-page-service';
 import { AsyncPipe } from '@angular/common';
@@ -55,7 +56,7 @@ export interface Trip {
   templateUrl: './trips.html',
   styleUrl: './trips.css',
 })
-export class Trips implements OnInit {
+export class Trips implements OnInit, OnDestroy {
   displayedColumns: string[] = [
     'tripId',
     'location',
@@ -66,22 +67,28 @@ export class Trips implements OnInit {
   ];
   dataSource: Trip[] = [];
   trackBy = (index: number, el: Trip) => el.tripId;
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private tripService: TripsService,
     protected homePageService: HomePageService,
   ) {}
+
   ngOnInit() {
-    this.tripService.getTrips().subscribe({
+    interval(1000).pipe(
+      switchMap(() => this.tripService.getTrips()),
+      takeUntil(this.destroy$),
+    ).subscribe({
       next: (trips) => {
-        this.dataSource = [...this.dataSource, ...trips];
+        this.dataSource = trips;
       },
     });
   }
 
-  addTrip(): void {}
-
-  removeTrip(): void {}
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   protected viewTrip(tripId: string) {
     this.tripService.getTrip(tripId).subscribe({

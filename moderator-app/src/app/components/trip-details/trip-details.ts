@@ -4,6 +4,7 @@ import { TripsService } from '../../services/trips-service';
 import { MatDivider, MatList, MatListItem, MatListSubheaderCssMatStyler } from '@angular/material/list';
 import { MatButton } from '@angular/material/button';
 import { concatMap } from 'rxjs';
+import { HomePageService } from '../../services/home-page-service';
 
 @Component({
   selector: 'app-trip-details',
@@ -15,6 +16,7 @@ export class TripDetails {
   @Input() trip: Trip | undefined;
 
   constructor(
+    private homePageService: HomePageService,
     private tripService: TripsService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -33,9 +35,8 @@ export class TripDetails {
   protected acknowledgeTrip(tripId: string) {
     this.tripService
       .acknowledgeTrip(tripId)
-      .pipe(concatMap((success) => this.tripService.getTrip(tripId)))
-      .subscribe((trip) => {
-        this.trip = trip;
+      .subscribe((success) => {
+        this.homePageService.clearSelectedTrip();
         this.cdr.detectChanges();
       });
   }
