@@ -91,9 +91,16 @@ export class Trips implements OnInit, OnDestroy {
         if (!event) {
           return;
         }
-        this.dataSource = this.dataSource.filter((trip) => trip.tripId !== event.tripId);
-        this.cdr.detectChanges();
-        console.log('removing trip with id', event.tripId);
+
+        if (
+          event.event === 'acknowledge' ||
+          event.event === 'claim'
+        ) {
+          this.dataSource = this.dataSource.filter((trip) => trip.tripId !== event.tripId);
+          this.cdr.detectChanges();
+          console.log('removing trip with id', event.tripId);
+        }
+
       },
     });
   }

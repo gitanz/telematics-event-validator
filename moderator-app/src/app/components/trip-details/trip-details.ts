@@ -57,6 +57,7 @@ export class TripDetails implements OnInit, OnDestroy {
       .acknowledgeTrip(tripId)
       .subscribe((success) => {
         this.homePageService.clearSelectedTrip();
+        this.tripService.emitTripEvent({ event: 'acknowledge', tripId });
         this.cdr.detectChanges();
       });
   }

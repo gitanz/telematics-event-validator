@@ -40,8 +40,8 @@ export class TripsService {
   connectEventSource(): void {
     this.eventSource = new EventSource(`${environment.apiUrl}/events`, { withCredentials: true });
     this.eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      this.tripEventSubject.next(data);
+      const tripEvent = JSON.parse(event.data);
+      this.emitTripEvent(tripEvent);
     };
   }
 
@@ -50,5 +50,9 @@ export class TripsService {
       this.eventSource.close();
       this.eventSource = null;
     }
+  }
+
+  emitTripEvent(event: { event: string, tripId: string }) {
+    this.tripEventSubject.next(event);
   }
 }
