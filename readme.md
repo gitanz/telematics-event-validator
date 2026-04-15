@@ -28,6 +28,35 @@ Below a high level of how it will be handled.
 ##### Components 
 
 1. Trip Simulator Service
-2. Trip Ingestion Service
-3. Trip Review Service
-4. Moderator Interface
+   - Details in trip_simulator/readme.md
+2. Trip Ingestion Service 
+    - Details in trip_ingestion_service/readme.md
+3. Trip Review Service (port 8010)
+    - Details in trip_review_service/readme.md
+    - Use http://localhost:8010
+4. Moderator Interface (port 8080)
+   - Use http://localhost:8080 to access the moderator interface
+   - Few moderators are seeded in moderators table for testing purpose. 
+   - You can use the following credentials to login to the moderator interface.
+   - (10001, 'North America'), 
+   - (10002, 'North America')
+   - (10006, 'Europe'), 
+   - (10007, 'Europe')
+    
+5. Database (port 33066)
+    - MySQL database to store trip data and moderator data
+    - user/password: root/root
+
+6. Message Queue (port 5672 and 15672)
+    - RabbitMQ to decouple the trip ingestion and trip review services
+    - user/password: guest/guest
+
+Running it 
+-----------
+1. clone the project using
+2. run `docker compose up` in the root directory of the project
+3. This will start up all the above components as separate containers
+4. The Trip Review Service might fail on it's connection to the database, for the first time.
+    Reason, the database container might take a bit longer to start up and be ready to accept connections.
+   
+5. You will have to restart container manually.
