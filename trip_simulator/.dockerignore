@@ -6,7 +6,7 @@ __pycache__/
 *.sqlite3
 *.log
 *.env
-.env.*
+tests/.env.test
 *.egg-info/
 dist/
 build/

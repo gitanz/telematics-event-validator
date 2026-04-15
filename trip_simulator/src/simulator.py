@@ -1,24 +1,34 @@
-from config import Config
+import asyncio
+import logging
+
+from config import QueueConfig
+from queue_utils import QueueUtilInterface, QueueUtilFactory
 from trip_faker import TripFaker
-from trip_ingestion_service import TripIngestionService
 
 
 class Simulator:
 
-    def __init__(self, trip_faker: TripFaker, ingestion_service: TripIngestionService):
+    def __init__(self, trip_faker: TripFaker, queue_util: QueueUtilInterface):
         self.trip_faker = trip_faker
-        self.trip_ingestion_service = ingestion_service
+        self.queue_util = queue_util
 
-    def execute(self):
+    async def execute(self):
         for trip in self.trip_faker.execute():
-            self.trip_ingestion_service.queue_trip(trip.to_dict())
+            await self.queue_util.push(trip)
+            logging.info('queued')
+            print('queued')
+
+
+
+async def run_simulator(trip_faker: TripFaker, queue_config: QueueConfig):
+    queue_util = await QueueUtilFactory(queue_config).getQueueUtil()
+    simulator = Simulator(trip_faker, queue_util)
+    logging.info("Starting simulation...")
+    print("Starting simulation...")
+    await simulator.execute()
 
 
 if __name__ == "__main__":
-    config = Config()
     trip_faker = TripFaker()
-    print(f"Starting simulator with the following configuration: {config.to_dict()}")
-    trip_ingestion_service = TripIngestionService(config.TRIP_INGESTION_SERVICE_URL)
-    simulator = Simulator(trip_faker, trip_ingestion_service)
-
-    simulator.execute()
+    config = QueueConfig()
+    asyncio.run(run_simulator(trip_faker, config))

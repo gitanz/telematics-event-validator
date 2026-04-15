@@ -1,4 +1,6 @@
+import json
 import logging
+import traceback
 
 from aio_pika.abc import AbstractIncomingMessage
 from typing import Union
@@ -19,13 +21,15 @@ class Ingestor:
             try:
                 message: Union[AbstractIncomingMessage, None] = await self.queue_util.pop()
                 if message:
-                    trip = Trip.model_validate_json(message.body.decode())
+                    trip = json.loads(message.body.decode())
+                    trip  = Trip(**trip)
                     self.trip_repository.insert(trip)
                     print(f"Trip ingested: {trip.trip_id}")
                     logging.info('OK: Trip ingested successfully')
                     await message.ack()
 
             except Exception as e:
+                traceback.print_exc()
                 logging.error(f"Error ingesting trip: {str(e)}")
 
             finally:
