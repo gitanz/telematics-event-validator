@@ -1,0 +1,265 @@
+{
+  "info": {
+    "_postman_id": "635bb428-3260-427b-8ccd-ccc28164cecb",
+    "name": "Trip Validation Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "16578415"
+  },
+  "item": [
+    {
+      "name": "trip_review_service",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "pm.environment.set(\"authToken\", response.token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"moderator_id\": 10001,\n    \"location\": \"North America\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8010/api/v1/login",
+              "host": [
+                "localhost"
+              ],
+              "port": "8010",
+              "path": [
+                "api",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "Login Endpoint\n\n- Issues a new JWT access token\n    \n- returns set-cookie response header, to set http-only secure cookie"
+          },
+          "response": []
+        },
+        {
+          "name": "Get trips",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8010/api/v1/trips",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8010",
+              "path": [
+                "api",
+                "v1",
+                "trips"
+              ]
+            },
+            "description": "Trip Lists\n\n- Returns array with trips json, accessible to the logged in moderator"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trip By Trip ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8010/api/v1/trips/:trip_id",
+              "host": [
+                "localhost"
+              ],
+              "port": "8010",
+              "path": [
+                "api",
+                "v1",
+                "trips",
+                ":trip_id"
+              ],
+              "variable": [
+                {
+                  "key": "trip_id",
+                  "value": "7713c89961624f719e9fc125d93b2812"
+                }
+              ]
+            },
+            "description": "Gets trip by the trip's Unique ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Claim Trip by Trip ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "localhost:8010/api/v1/trips/:trip_id/claim",
+              "host": [
+                "localhost"
+              ],
+              "port": "8010",
+              "path": [
+                "api",
+                "v1",
+                "trips",
+                ":trip_id",
+                "claim"
+              ],
+              "variable": [
+                {
+                  "key": "trip_id",
+                  "value": "7713c89961624f719e9fc125d93b2812"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Acknowlegde Trip by Trip ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "localhost:8010/api/v1/trips/:trip_id/acknowledge",
+              "host": [
+                "localhost"
+              ],
+              "port": "8010",
+              "path": [
+                "api",
+                "v1",
+                "trips",
+                ":trip_id",
+                "acknowledge"
+              ],
+              "variable": [
+                {
+                  "key": "trip_id",
+                  "value": "7713c89961624f719e9fc125d93b2812"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Events",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8010/api/v1/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8010",
+              "path": [
+                "api",
+                "v1",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "trip_ingestion_service",
+      "item": [
+        {
+          "name": "queue_trip",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/v1/webhook/trip",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "v1",
+                "webhook",
+                "trip"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
