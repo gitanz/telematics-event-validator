@@ -50,7 +50,7 @@ class RabbitMQQueueUtil(QueueUtilInterface):
     async def create(cls, host: str, port: int, user: str, password: str, queue_name: str = "trips"):
         connection = await connect_robust(f"amqp://{user}:{password}@{host}:{port}/")
         channel = await connection.channel()
-        await channel.declare_queue(queue_name)
+        await channel.declare_queue(queue_name, durable=True)
         return cls(connection, channel, queue_name)
 
     async def push_claim(self, trip: Trip) -> None:
